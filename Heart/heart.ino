@@ -1,3 +1,4 @@
+//Code for heart beating
 #include <SoftwareSerial.h>
 #include "FastLED.h"          // библиотека для работы с лентой
 
