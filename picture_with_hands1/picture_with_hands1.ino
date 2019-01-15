@@ -1,4 +1,7 @@
+#include <DFPlayer_Mini_Mp3.h>
+
 #include <SoftwareSerial.h>
+
 #define SSerialRX        7  //Serial Receive pin
 #define SSerialTX        3  //Serial Transmit pin
 #define SSerialTxControl 2   //RS485 Direction control
@@ -9,24 +12,32 @@ int stepOutPin = 8;
 
 int mosfet = 9;             //мосфет
 int MHSens = 10;              //концевик
+int led = 13;                 //подсветка
 int text;
 String string0 = "Master_hands1_on#";
 
 String string;
+int thisdelay = 400;        //скорость рук
+int p = 0;                  //флаг плеера
 int a =0;
 int b = 0;
 unsigned long time0 = 0;
+SoftwareSerial mySerial(5, 4);                    // MP3 плеер
 SoftwareSerial RS485Serial(SSerialRX, SSerialTX); // RX, TX
 
 
 void setup() {
   Serial.begin(9600);
+  mySerial.begin(9600);                     // скорость софт Сериал
+  mp3_set_serial (mySerial);                //   софтовый серийный порт для мп3
+  delay (100);                              //  обязательная задержка между командами
+  mp3_set_volume (30);
   pinMode(SSerialTxControl, OUTPUT);
   digitalWrite(SSerialTxControl, LOW);
   
   RS485Serial.begin(9600); 
   pinMode(dirOutPin, OUTPUT);
-  pinMode(13, OUTPUT);
+  pinMode(led, OUTPUT);
   pinMode(mosfet, OUTPUT);
   pinMode(MHSens, INPUT);
   pinMode(stepOutPin, OUTPUT);
@@ -47,7 +58,7 @@ void stepleft() {   //рухи руками
 
       digitalWrite(stepOutPin, LOW);
 
-      delayMicroseconds(400);
+      delayMicroseconds(thisdelay);
 
       digitalWrite(stepOutPin, HIGH);
 
@@ -71,21 +82,29 @@ void stepleft() {   //рухи руками
 
       digitalWrite(stepOutPin, LOW);
 
-      delayMicroseconds(400);
+      delayMicroseconds(100);
 
       digitalWrite(stepOutPin, HIGH);
 
-     // delayMicroseconds(100);
       }
+
+      
       }
       }
 }
 
 void loop() {
-digitalWrite(13,LOW);
+  if(p=1){
+   mp3_stop ();
+    p=0;
+  }
+  
+digitalWrite(led, LOW);
 digitalWrite(SSerialTxControl, LOW);
 
  if (RS485Serial.available()) {
+  string = "";
+  delay(100);
   tx();
  }
 }
@@ -102,6 +121,9 @@ void tx() {   // розпізнання команд
       {
       a=0;
       b=0;
+      mp3_play (1);
+      p=1;
+      digitalWrite(led, HIGH);
       stepleft();
       }
     string = "";
@@ -117,7 +139,7 @@ void up() {
 
       digitalWrite(stepOutPin, LOW);
 
-      delayMicroseconds(400);
+      delayMicroseconds(thisdelay);
 
       digitalWrite(stepOutPin, HIGH);
 
@@ -126,13 +148,13 @@ void up() {
 }
 
 void down() {
-  while(b<9500) {
+  while(b<10000) {
   b++;
       digitalWrite(dirOutPin, LOW);
 
       digitalWrite(stepOutPin, LOW);
 
-      delayMicroseconds(400);
+      delayMicroseconds(thisdelay);
 
       digitalWrite(stepOutPin, HIGH);
 

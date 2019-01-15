@@ -28,23 +28,26 @@ Off 10EFA05F
 #define RS485Transmit    HIGH
 #define RS485Receive     LOW
 
-//int irsend = 3;
+
 int led1ru =12;        //підсвітка тексту 
 int led2ru =11;
 int led3ru =10;
-int led1en =9;
+
+int led1en =6;
 int led2en =8;
 int led3en =7;
-int led1heb =6;
+
+int led1heb =9;
 int led2heb =14;
 int led3heb =15;
 
-int lightTV =20;
+int lightTV =13;
 
 String string0 = "Master_mirror_ru#";
 String string1 = "Master_mirror_en#";
 String string2 = "Master_mirror_heb#";
 String string;
+unsigned long time0 = 0;
 
 IRsend irsend;
 SoftwareSerial RS485Serial(SSerialRX, SSerialTX); // RX, TX
@@ -67,35 +70,22 @@ void setup()
     pinMode(led2heb, OUTPUT);
     pinMode(led3heb, OUTPUT);
     pinMode(lightTV, OUTPUT);
+    digitalWrite(lightTV, LOW); 
+   
+
     
 }
 
-void irblink() //перша команда
-{
-    irsend.sendNEC(0x10EFA05F, 32); //on
-    delay(8000);
-    irsend.sendNEC(0x10EFC23D, 32); // ->
-    delay(1000);
-    irsend.sendNEC(0x10EFC23D, 32); // ->
-    delay(1000);
-    irsend.sendNEC(0x10EF42BD, 32); // ok
-    delay(1000);
-    irsend.sendNEC(0x10EF42BD, 32); // ok
-    delay(1000);
-    irsend.sendNEC(0x10EFC23D, 32); // ->
-    //delay(1000);
-    //irsend.sendNEC(0x10EFCC33, 32); // play
-    //RS485Serial.write('s'); 
-}
  
 void loop() 
 {
+ 
   
   digitalWrite(SSerialTxControl, LOW);
-  digitalWrite(13,LOW);
+ 
  if (RS485Serial.available()) {
-   digitalWrite(13,HIGH);
-   delay(500);
+  string = "";
+  delay(100);
   tx();
  }
 }
@@ -109,17 +99,20 @@ void tx() {              //розпізнання команд
     if (inChar == '#') 
     {
       if (string.equals(string0))
-      {          
+      {  
+        digitalWrite(lightTV, LOW);        
       ru();
+      
       }
       if (string.equals(string1))
       {
-       // en();
+        digitalWrite(lightTV, LOW);
+        en();
       }
       if (string.equals(string2))
       {
-        
-       // heb();
+        digitalWrite(lightTV, LOW);
+        heb();
       }
     string = "";
     }
@@ -130,8 +123,9 @@ loop();
 
 
 void ru() {
+  
   irsend.sendNEC(0x10EFA05F, 32); //on
-    delay(8000);
+    delay(13000);
     irsend.sendNEC(0x10EFC23D, 32); // ->
     delay(1000);
     irsend.sendNEC(0x10EFC23D, 32); // ->
@@ -141,6 +135,10 @@ void ru() {
     irsend.sendNEC(0x10EF42BD, 32); // ok
     delay(1000);
     irsend.sendNEC(0x10EFC23D, 32); // ->
+    delay(1000);
+    irsend.sendNEC(0x10EFCC33, 32); // play
+    delay(3000);
+    irsend.sendNEC(0x10EFCC33, 32); // pause
   delay(10000);
  digitalWrite(led1ru, HIGH);
   delay(10000); 
@@ -151,10 +149,30 @@ void ru() {
  digitalWrite(led1ru, LOW);
 digitalWrite(led2ru, LOW);
 digitalWrite(led3ru, LOW);
+
 irsend.sendNEC(0x10EFCC33, 32); // play
-loop();
+time0=millis();
+delay(4000);
+digitalWrite(lightTV, HIGH);
+off();
 }
+
 void en() {
+       irsend.sendNEC(0x10EFA05F, 32); //on
+    delay(13000);
+    irsend.sendNEC(0x10EFC23D, 32); // ->
+    delay(1000);
+    irsend.sendNEC(0x10EFC23D, 32); // ->
+    delay(1000);
+    irsend.sendNEC(0x10EF42BD, 32); // ok
+    delay(1000);
+    irsend.sendNEC(0x10EF42BD, 32); // ok
+    delay(1000);
+    irsend.sendNEC(0x10EFC23D, 32); // ->
+    delay(1000);
+    irsend.sendNEC(0x10EFCC33, 32); // play
+    delay(4000);
+    irsend.sendNEC(0x10EFCC33, 32); // pause
    delay(10000);
  digitalWrite(led1en, HIGH);
   delay(10000); 
@@ -165,9 +183,29 @@ void en() {
  digitalWrite(led1en, LOW);
 digitalWrite(led2en, LOW);
 digitalWrite(led3en, LOW);
-loop();
+irsend.sendNEC(0x10EFCC33, 32); // play
+time0=millis();
+delay(4000);
+
+digitalWrite(lightTV, HIGH);
+off();
 }
 void heb() {
+       irsend.sendNEC(0x10EFA05F, 32); //on
+    delay(13000);
+    irsend.sendNEC(0x10EFC23D, 32); // ->
+    delay(1000);
+    irsend.sendNEC(0x10EFC23D, 32); // ->
+    delay(1000);
+    irsend.sendNEC(0x10EF42BD, 32); // ok
+    delay(1000);
+    irsend.sendNEC(0x10EF42BD, 32); // ok
+    delay(1000);
+    irsend.sendNEC(0x10EFC23D, 32); // ->
+    delay(1000);
+    irsend.sendNEC(0x10EFCC33, 32); // play
+    delay(4000);
+    irsend.sendNEC(0x10EFCC33, 32); // pause
    delay(10000);
  digitalWrite(led1heb, HIGH);
   delay(10000); 
@@ -178,13 +216,22 @@ void heb() {
  digitalWrite(led1heb, LOW);
 digitalWrite(led2heb, LOW);
 digitalWrite(led3heb, LOW);
-loop();
+irsend.sendNEC(0x10EFCC33, 32); // play
+time0=millis();
+delay(4000);
+
+digitalWrite(lightTV, HIGH);
+off();
 }
 
 void off()    // виключити ТВ
-{
+{ 
+  while(millis()-time0<80050){
+    if(millis()-time0>80000){
+    digitalWrite(lightTV, LOW); 
     irsend.sendNEC(0x10EFA05F, 32); 
-    loop();
+    }
+  }
 }
 
 

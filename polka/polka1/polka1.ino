@@ -1,19 +1,19 @@
 #include <SoftwareSerial.h>
-#define SSerialRX       4  //Serial Receive pin
+#define SSerialRX        8  //Serial Receive pin
 #define SSerialTX        3  //Serial Transmit pin
-#define SSerialTxControl 9   //RS485 Direction control
+#define SSerialTxControl 2   //RS485 Direction control
 #define RS485Transmit    HIGH
 #define RS485Receive     LOW
 
 int Zamok=7;        //магнітний замок
-int MHSens= 8;      //дарчик-кінцевик
+int MHSens= 6;      //дарчик-кінцевик
 int dirOutPin = 5;
-int stepOutPin = 6;
+int stepOutPin = 4;
 
 int               a = 0;
 int               p = 0;
 int               c = 0;
-String string0 = "Master_ShoeRack2_180deg#";
+String string0 = "Master_ShoeRack1_180deg#";
 String string;
 
 
@@ -45,7 +45,7 @@ if(a=0){
       {
         p++;
         digitalWrite(Zamok,LOW);
-      digitalWrite(dirOutPin, LOW);
+      digitalWrite(dirOutPin, HIGH);
 
       digitalWrite(stepOutPin, HIGH);
 
@@ -64,7 +64,7 @@ digitalWrite(13,LOW);
 digitalWrite(SSerialTxControl, LOW);
 digitalWrite(Zamok,HIGH);
  if (RS485Serial.available()) {
-   string = "";
+  string = "";
   delay(100);
   tx();
  }

@@ -7,18 +7,20 @@
 #define RS485Receive     LOW
 
 //int irsend = 3;
-int MHSens1= 7;            //інфра червоний датчик  
-int MHSens2= 8;
-int MHSens3= 9;
-int MHSens4= 10;
-int MHSens5= 11;
-int MHSens6= 12;
+int button1= 9;            //інфра червоний датчик  
+int button2= 7;
+int button3= 8;
+int button4= 11;
+int button5= 10;
 
-int led1 = 14;        //підсвітка
-int led2 = 15;
-int led3 = 16;
-int led4 = 17;
-int led5 = 18;
+
+int MHSens= 12;
+
+int led1 = 16;        //підсвітка
+int led2 = 14;
+int led3 = 15;
+int led4 = 18;
+int led5 = 17;
 
 int dirOutPin = 5;
 int stepOutPin = 6;
@@ -32,15 +34,16 @@ int p3=0;
 int p4=0;
 int p5=0;
 int p6=0;
+int p0=0;
 
 String string0 = "Master_Photos1_on#";
 String string1 = "Master_Photos1_change#";
 String string2 = "Master_Photos1_back#";
 
-String stringbad = "Slave_Photos1_badParole";
-String stringgood = "Slave_Photos1_goodParole";
+String stringbad = "Slave_Photos1_badParole#";
+String stringgood = "Slave_Photos1_goodParole#";
 String string;
-
+unsigned long i = 0;
 
 SoftwareSerial RS485Serial(SSerialRX, SSerialTX); // RX, TX
 
@@ -54,110 +57,109 @@ void setup()
     pinMode(13, OUTPUT);
     pinMode(dirOutPin, OUTPUT);
     pinMode(stepOutPin, OUTPUT);
-    pinMode(MHSens1, INPUT);
-    pinMode(MHSens2, INPUT);
-    pinMode(MHSens3, INPUT);
-    pinMode(MHSens4, INPUT);
-    pinMode(MHSens5, INPUT);
-    pinMode(MHSens6, INPUT);
+    pinMode(button1, INPUT_PULLUP);
+    pinMode(button2, INPUT_PULLUP);
+    pinMode(button3, INPUT_PULLUP);
+    pinMode(button4, INPUT_PULLUP);
+    pinMode(button5, INPUT_PULLUP);
+    pinMode(MHSens, INPUT_PULLUP);
     pinMode(led1, OUTPUT);
     pinMode(led2, OUTPUT);
     pinMode(led3, OUTPUT);
     pinMode(led4, OUTPUT);
     pinMode(led5, OUTPUT);
+
+     
 }
 
 
  
 void loop() 
 { 
+  
+ digitalWrite(SSerialTxControl, LOW);
+
+   if (RS485Serial.available()) {
+  string = "";
+  delay(100);
+  tx();
+ }
+
+
+  
   if (light==1) {
-  digitalWrite(led1, HIGH);
-  }else if (light==0) {
-  digitalWrite(led1, LOW);
+    if (digitalRead(button1) == LOW){digitalWrite(led1, HIGH);}else{digitalWrite(led1, LOW);}
+    if (digitalRead(button2) == LOW){digitalWrite(led2, HIGH);}else{digitalWrite(led2, LOW);}
+    if (digitalRead(button3) == LOW){digitalWrite(led3, HIGH);}else{digitalWrite(led3, LOW);}
+    if (digitalRead(button4) == LOW){digitalWrite(led4, HIGH);}else{digitalWrite(led4, LOW);}
+    if (digitalRead(button5) == LOW){digitalWrite(led5, HIGH);}else{digitalWrite(led5, LOW);}
+  }if (light==0) {
+    digitalWrite(led1, LOW);
+    digitalWrite(led2, LOW);
+    digitalWrite(led3, LOW);
+    digitalWrite(led4, LOW);
+    digitalWrite(led5, LOW);
   }
+
   
  if (p==1) {
-  if (digitalRead(MHSens1) == LOW && p1==0 && p2==0 && p3==0 && p4==0 && p5==0) {
-    while(digitalRead(MHSens1) == LOW){
-      digitalWrite(led1, LOW);
+  if (digitalRead(button1) == LOW && p1==0 && p2==0 && p3==0 && p4==0 && p5==0) {
      p1=1;
-     }
-     digitalWrite(SSerialTxControl, HIGH);
-     RS485Serial.println(1);
-  }else if (digitalRead(MHSens1) == LOW && (p2==1 || p1==1 || p3==1 || p4==1 || p5==1)){
-    while(digitalRead(MHSens1) == LOW){
-     p1=0;p2=0;p3=0;p4=0;p5=0;
-     }
+  }else if (digitalRead(button1) == LOW && (p2==1  || p3==1 || p4==1 || p5==1) && p0==0){
      digitalWrite(SSerialTxControl, HIGH);
      RS485Serial.println(stringbad);
+     p0=1;
+     p1=0;p2=0;p3=0;p4=0;p5=0;
+     
   }
   
-  if (digitalRead(MHSens2) == LOW && p1==1 && p2==0 && p3==0 && p4==0 && p5==0) {
-     while(digitalRead(MHSens2) == LOW){
-       digitalWrite(led1, LOW);
+  if (digitalRead(button2) == LOW && p1==1 && p2==0 && p3==0 && p4==0 && p5==0) {
      p2=1;
-     }
-     digitalWrite(SSerialTxControl, HIGH);
-     RS485Serial.println(2);
-   }else if (digitalRead(MHSens2) == LOW && (p1==0 || p2==1 || p3==1 || p4==1 || p5==1)){
-    while(digitalRead(MHSens2) == LOW){
-     p1=0;p2=0;p3=0;p4=0;p5=0;
-     }
+   }else if (digitalRead(button2) == LOW && (p1==0  || p3==1 || p4==1 || p5==1) && p0==0){
      digitalWrite(SSerialTxControl, HIGH);
      RS485Serial.println(stringbad);
+     p0=1;
+     p1=0;p2=0;p3=0;p4=0;p5=0;
   }
   
-   if (digitalRead(MHSens3) == LOW && p1==1 && p2==1 && p3==0 && p4==0 && p5==0) {
-     while(digitalRead(MHSens3) == LOW){
-       digitalWrite(led1, LOW);
+   if (digitalRead(button3) == LOW && p1==1 && p2==1 && p3==0 && p4==0 && p5==0) {
      p3=1;
-     }
-     digitalWrite(SSerialTxControl, HIGH);
-     RS485Serial.println(3);
-     }else if (digitalRead(MHSens3) == LOW && (p1==0 || p2==0 || p3==1 || p4==1 || p5==1)){
-    while(digitalRead(MHSens3) == LOW){
-     p1=0;p2=0;p3=0;p4=0;p5=0;
-     }
+   }else if (digitalRead(button3) == LOW && (p1==0 || p2==0  || p4==1 || p5==1) && p0==0){
      digitalWrite(SSerialTxControl, HIGH);
      RS485Serial.println(stringbad);
+     p0=1;
+     p1=0;p2=0;p3=0;p4=0;p5=0;
   }
   
-  if (digitalRead(MHSens4) == LOW && p1==1 && p2==1 && p3==1 && p4==0 && p5==0) {
-     while(digitalRead(MHSens4) == LOW){
-       digitalWrite(led1, LOW);
+  if (digitalRead(button4) == LOW && p1==1 && p2==1 && p3==1 && p4==0 && p5==0) {
      p4=1;
-     }
-     digitalWrite(SSerialTxControl, HIGH);
-     RS485Serial.println(4);
-     }else if (digitalRead(MHSens4) == LOW && (p1==0 || p2==0 || p3==0 || p4==1 || p5==1)){
-    while(digitalRead(MHSens4) == LOW){
-     p1=0;p2=0;p3=0;p4=0;p5=0;
-     }
+  }else if (digitalRead(button4) == LOW && (p1==0 || p2==0 || p3==0  || p5==1) && p0==0){
      digitalWrite(SSerialTxControl, HIGH);
      RS485Serial.println(stringbad);
+     p0=1;
+     p1=0;p2=0;p3=0;p4=0;p5=0;
   }
   
-   if (digitalRead(MHSens5) == LOW && p1==1 && p2==1 && p3==1 && p4==1 && p5==0) {
+   if (digitalRead(button5) == LOW && p1==1 && p2==1 && p3==1 && p4==1 && p5==0) {
      digitalWrite(SSerialTxControl, HIGH);
      RS485Serial.println(stringgood);
-     p=0; light=0;
-     }else if (digitalRead(MHSens5) == LOW && (p1==0 || p2==0 || p3==0 || p4==0 || p5==1)){
-    while(digitalRead(MHSens5) == LOW){
-     p1=0;p2=0;p3=0;p4=0;p5=0;
-     }
+     p5=1;
+     p=0; light=0; p1=0;p2=0;p3=0;p4=0;p5=0;
+     
+   }else if (digitalRead(button5) == LOW && (p1==0 || p2==0 || p3==0 || p4==0 ) && p0==0){
      digitalWrite(SSerialTxControl, HIGH);
      RS485Serial.println(stringbad);
+     p0=1;
+     p1=0;p2=0;p3=0;p4=0;p5=0;
+  }
+
+
+  if(digitalRead(button1) == HIGH && digitalRead(button2) == HIGH && digitalRead(button3) == HIGH && digitalRead(button4) == HIGH && digitalRead(button5) == HIGH && p0==1){
+    p0=0;
   }
 }
   
-  digitalWrite(SSerialTxControl, LOW);
-  digitalWrite(13,LOW);
-   if (RS485Serial.available()) {
-     digitalWrite(13,HIGH);
-     delay(500);
-  tx();
- }
+ 
 }
 
 void tx() {                          // розпізнання команди
@@ -175,6 +177,8 @@ void tx() {                          // розпізнання команди
       }
       if (string.equals(string1) )
       {
+          p=0;
+         light=0;
          stepDown();
       }
       if (string.equals(string2))
@@ -182,6 +186,7 @@ void tx() {                          // розпізнання команди
          p=0;
          light=0;
          stepUp();
+         i=0;
          
       }
       
@@ -193,34 +198,30 @@ loop();
 }
 
 void stepDown() {   //зміна фоток
-  while (a < 3200) 
+     while (digitalRead(MHSens)==HIGH )
       {
-      a++;
-      digitalWrite(dirOutPin, HIGH);
-
-      digitalWrite(stepOutPin, HIGH);
-
-      delayMicroseconds(500);
+       
+     digitalWrite(dirOutPin, HIGH);
 
       digitalWrite(stepOutPin, LOW);
 
-      delayMicroseconds(500);
+      delayMicroseconds(50);
+
+      digitalWrite(stepOutPin, HIGH);
+      
       }
 }
 void stepUp() {   //повернення фото в стартову позицію
-  while (digitalRead(MHSens6)==HIGH )
-      {
-      digitalWrite(dirOutPin, LOW);
-
-      digitalWrite(stepOutPin, HIGH);
-
-      delayMicroseconds(500);
+ while(i<65000 ){
+        i++;
+       digitalWrite(dirOutPin, LOW);
 
       digitalWrite(stepOutPin, LOW);
 
-      delayMicroseconds(500);
+      delayMicroseconds(50);
+
+      digitalWrite(stepOutPin, HIGH);
       }
-      //else{loop();}
 }
 
 

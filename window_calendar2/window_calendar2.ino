@@ -34,9 +34,9 @@ Off 807C50AF
 //int irsend = 3;
 int hollSens1= 4;            //датчик хола 
 int hollSens2= 5;
-int hollSens3= 6;
+int hollSens3= 8;
 int hollSens4= 7;
-int hollSens5= 8;
+int hollSens5= 6;
 int hollSens6= 9;
 
 int p=0;              //флаги
@@ -53,8 +53,8 @@ String string2 = "Master_Window2_vid3#";
 String string3 = "Master_Window2_off#";
 String string4 = "Master_Window2_pass#";
 
-String stringbad = "Slave_Window2_bad";
-String stringgood = "Slave_Window2_good";
+String stringbad = "Slave_Window2_bad#";
+String stringgood = "Slave_Window2_good#";
 String string;
 
 IRsend irsend;
@@ -93,30 +93,31 @@ void irblink()                               // перша команда
     irsend.sendNEC(0x807C1AE5, 32); // ->
     delay(1000);
     irsend.sendNEC(0x807C5AA5, 32); // ok
-    RS485Serial.write('s'); 
 }
  
 void loop() 
 { 
   if(p==1) {
-  if (digitalRead(hollSens1) == LOW && p1==0){digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringbad); p1=1;p4=0;p5=0;p6=0;}
+  if (digitalRead(hollSens1) == LOW && p1==0){digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringbad);delay(100);digitalWrite(SSerialTxControl, LOW); p1=1;p4=0;p5=0;p6=0;}
   if (digitalRead(hollSens1) == HIGH) {p1=0;}
-  if (digitalRead(hollSens2) == LOW && p2==0){digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringbad); p2=1;p4=0;p5=0;p6=0;}
+  if (digitalRead(hollSens2) == LOW && p2==0){digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringbad);delay(100);digitalWrite(SSerialTxControl, LOW); p2=1;p4=0;p5=0;p6=0;}
   if (digitalRead(hollSens2) == HIGH) {p2=0;}
-  if (digitalRead(hollSens3) == LOW && p3==0){digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringbad); p3=1;p4=0;p5=0;p6=0;}
+  if (digitalRead(hollSens3) == LOW && p3==0){digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringbad);delay(100);digitalWrite(SSerialTxControl, LOW); p3=1;p4=0;p5=0;p6=0;}
   if (digitalRead(hollSens3) == HIGH) {p3=0;}
   
   if (digitalRead(hollSens4) == LOW) {p4=1;}
   if (digitalRead(hollSens5) == LOW) {p5=1;}
   if (digitalRead(hollSens6) == LOW) {p6=1;}
    
-  if( p4==1 && p5==1 && p6==1) {digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringgood); p1=1;p4=0;p5=0;p6=0;}
+  if( p4==1 && p5==1 && p6==1) {digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringgood);delay(100);digitalWrite(SSerialTxControl, LOW); p=0;p4=0;p5=0;p6=0;}
   }
   
   digitalWrite(SSerialTxControl, LOW);
-  digitalWrite(13,LOW);
+  
    if (RS485Serial.available()) {
-  tx();
+    string = "";
+    delay(100);
+    tx();
  }
 }
 
@@ -129,21 +130,15 @@ void tx() {                          // розпізнання команди
     if (inChar == '#') 
     {
       if (string.equals(string0))
-      {
-      digitalWrite(SSerialTxControl, HIGH);
-      RS485Serial.write('t');                  
+      {                  
       irblink();
       }
       if (string.equals(string1) || string.equals(string2))
       {
-        digitalWrite(SSerialTxControl, HIGH);
-        RS485Serial.write('l');
         irblink1();
       }
       if (string.equals(string3))
       {
-        digitalWrite(SSerialTxControl, HIGH);
-        RS485Serial.write('r');
         irblink2();
       }
       if (string.equals(string4))

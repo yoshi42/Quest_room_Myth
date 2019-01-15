@@ -61,6 +61,8 @@ void state1(int s)
 
 void loop() {
   if (RS485Serial.available()) {
+    string = "";
+  delay(100);
      tx();
   }
   

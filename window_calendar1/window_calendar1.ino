@@ -77,8 +77,8 @@ void loop()
   digitalWrite(SSerialTxControl, LOW);
   //digitalWrite(13,LOW);
  if (RS485Serial.available()) {
-   //digitalWrite(13,HIGH);
-   //delay(500);
+   string = "";
+  delay(100);
   tx();
  }
 }

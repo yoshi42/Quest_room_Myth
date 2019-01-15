@@ -51,8 +51,8 @@ int p7 = 0;
 
 String string0 = "Master_Maski_on#";
 
-String stringgood = "Slave_Maski_good";
-String stringbad = "Slave_Maski_bad";
+String stringgood = "Slave_Maski_good#";
+String stringbad = "Slave_Maski_bad#";
 String string;
 
 SoftwareSerial RS485Serial(SSerialRX, SSerialTX); // RX, TX
@@ -114,6 +114,8 @@ void loop()
   digitalWrite(SSerialTxControl, LOW);
   digitalWrite(13,LOW);
    if (RS485Serial.available()) {
+    string = "";
+  delay(100);
   tx();
  }
 }

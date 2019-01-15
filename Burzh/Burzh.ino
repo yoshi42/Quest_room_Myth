@@ -22,7 +22,7 @@ String string0 = "Master_Burzh_on#";
 String string1 = "Master_Burzh_off#";
 String string2 = "Master_Burzh_open#";
 
-String stringgood = "Slave_Burzh_good";
+String stringgood = "Slave_Burzh_good#";
 
 String string;
 
@@ -60,6 +60,8 @@ strip.show(); // Initialize all pixels to ‘off’
 void loop() {
 digitalWrite(SSerialTxControl, LOW);
    if (RS485Serial.available()) {
+    string = "";
+  delay(100);
   tx();
  } 
 if (p==0){      //викл лєнту
@@ -149,7 +151,8 @@ void tx() {                          // розпізнання команди
       }
       if (string.equals(string1) )
       {  
-        p=0; 
+        p=0;
+       a=0; 
       }
       if (string.equals(string2) )
       {  
