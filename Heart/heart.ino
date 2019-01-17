@@ -4,25 +4,14 @@
 
 #define LED_COUNT 23          // число светодиодов в кольце/ленте
 
-#define LED_DT0 5             // пин, куда подключен DIN ленты
-#define LED_DT1 6
-#define LED_DT2 7
-#define LED_DT3 8
-#define LED_DT4 9
-#define LED_DT5 10
-#define LED_DT6 11           
-
+#define LED_DT0 7             // пин, куда подключен DIN ленты
+#define LED_DT1 8        
 
 int max_bright = 255;         // максимальная яркость (0 - 25)
 
 // ---------------СЛУЖЕБНЫЕ ПЕРЕМЕННЫЕ-----------------
 struct CRGB leds0[LED_COUNT];
 struct CRGB leds1[LED_COUNT];
-struct CRGB leds2[LED_COUNT];
-struct CRGB leds3[LED_COUNT];
-struct CRGB leds4[LED_COUNT];
-struct CRGB leds5[LED_COUNT];
-struct CRGB leds6[LED_COUNT];
 
 int delay1 = 217;          //-FX LOOPS DELAY VAR
 int delay2 = 72;          //-FX LOOPS DELAY VAR
@@ -49,9 +38,10 @@ int bouncedirection = 0;     //-SWITCH FOR COLOR BOUNCE (0-1)
 
 
 
-int zamok1 = 15;
-int zamok2 = 14;
-int light = 13;
+int zamok1 = 15;          // замок дверцы
+int zamok2 = 14;          // замок дневнека
+int light = 13;           // свет вокруг отверстия
+int p_led = 0;            //флаг подсветки отверстия
 
 int s1 = 16;
 int s2 = 17;
@@ -63,6 +53,7 @@ int sens = 12;
 int p_sens = 0;
 int start = 0;
 int brightness = 10;
+int delay_lock = 1500;
 
 String string0 = "Master_Heart_on#";
 String string1 = "Master_Heart_1#";
@@ -82,7 +73,6 @@ SoftwareSerial RS485Serial(SSerialRX, SSerialTX); // RX, TX
 
 void setup() {
   Serial.begin(9600);              // открыть порт для связи
-  //Serial.println("setup done");
   pinMode(SSerialTxControl, OUTPUT);
   digitalWrite(SSerialTxControl, LOW);
   RS485Serial.begin(9600);
@@ -109,11 +99,6 @@ void setup() {
   LEDS.setBrightness(max_bright);  // ограничить максимальную яркость
   LEDS.addLeds<WS2811, LED_DT0, GRB>(leds0, LED_COUNT);  // настрйоки для нашей ленты (ленты на WS2811, WS2812, WS2812B)
   LEDS.addLeds<WS2811, LED_DT1, GRB>(leds1, LED_COUNT);  // настрйоки для нашей ленты (ленты на WS2811, WS2812, WS2812B)
-  LEDS.addLeds<WS2811, LED_DT2, GRB>(leds2, LED_COUNT);  // настрйоки для нашей ленты (ленты на WS2811, WS2812, WS2812B)
-  LEDS.addLeds<WS2811, LED_DT3, GRB>(leds3, LED_COUNT);  // настрйоки для нашей ленты (ленты на WS2811, WS2812, WS2812B)
-  LEDS.addLeds<WS2811, LED_DT4, GRB>(leds4, LED_COUNT);  // настрйоки для нашей ленты (ленты на WS2811, WS2812, WS2812B)
-  LEDS.addLeds<WS2811, LED_DT5, GRB>(leds5, LED_COUNT);  // настрйоки для нашей ленты (ленты на WS2811, WS2812, WS2812B)
-  LEDS.addLeds<WS2811, LED_DT6, GRB>(leds6, LED_COUNT);  // настрйоки для нашей ленты (ленты на WS2811, WS2812, WS2812B)
   one_color_all(0, 0, 0);          // погасить все светодиоды
   LEDS.show();                     // отослать команду
 }
@@ -122,21 +107,21 @@ void setup() {
 
 void loop() {
   digitalWrite(SSerialTxControl, LOW);
-  if (Serial.available()) {
+  if (RS485Serial.available()) {
       string = "";
     delay(100);
     tx();
   }
 
-  color_bounceFADE();
+ color_bounceFADE();
 }
 
 
 void tx() {                          // розпізнання команди
   digitalWrite(SSerialTxControl, LOW);
-  while (Serial.available())
+  while (RS485Serial.available())
   {
-    char inChar = Serial.read();
+    char inChar = RS485Serial.read();
     string += inChar;
     if (inChar == '#')
     {
@@ -175,9 +160,9 @@ void tx() {                          // розпізнання команди
       }
       if (string.equals(string6))
       {
-        digitalWrite(zamok1, HIGH);
         digitalWrite(zamok2, HIGH);
-        delay(20*brightness);
+        digitalWrite(zamok1, HIGH);
+        delay(delay_lock);
         digitalWrite(zamok1, LOW);
         digitalWrite(zamok2, LOW);
       }
@@ -191,13 +176,14 @@ void tx() {                          // розпізнання команди
 void message_on() {
   if (digitalRead(sens) == LOW) {
     digitalWrite(zamok1, HIGH);
-    delay(20*brightness);
+    delay(delay_lock);
     digitalWrite(zamok1, LOW);
   }
 }
 
-void message_1() {     
-  //Serial.println("message1");             
+void message_1() {    
+  one_color_all(0, 0, 0);          // погасить все светодиоды
+  LEDS.show();                     // отослать команду              
   digitalWrite(s1, HIGH);
   digitalWrite(s2, HIGH);
   digitalWrite(s3, LOW);
@@ -205,11 +191,13 @@ void message_1() {
   thisdelay = delay1;
   start = 1;
   brightness = 5;
+  digitalWrite(light, LOW);
   color_bounceFADE();
 
 }
 void message_2() {
-  //Serial.println("message2");
+  one_color_all(0, 0, 0);          // погасить все светодиоды
+  LEDS.show();                     // отослать команду
   digitalWrite(s1, HIGH);
   digitalWrite(s2, LOW);
   digitalWrite(s3, HIGH);
@@ -217,28 +205,35 @@ void message_2() {
   thisdelay = delay2;
   start = 1;
   brightness = 7;
+  digitalWrite(light, LOW);
   color_bounceFADE();
 
 }
 void message_3() {
+  one_color_red();
+  LEDS.show();                     // отослать команду
+  digitalWrite(light, HIGH);
   digitalWrite(zamok1, HIGH);
-  delay(1000);
+  delay(delay_lock);
   digitalWrite(zamok1, LOW);
   digitalWrite(s1, HIGH);
   digitalWrite(s2, LOW);
   digitalWrite(s3, LOW);
   digitalWrite(s4, HIGH);
-  digitalWrite(light, HIGH);
   thisdelay = delay3;
   p_sens = 1;
   start = 1;
   brightness = 9;
-   color_bounceFADE();
+  p_led = 1;
+  color_bounceFADE();
 
 }
 
 
 void message_dead() {
+  one_color_all(0, 0, 0);          // погасить все светодиоды
+  LEDS.show();                     // отослать команду
+  digitalWrite(light, LOW);
   p_sens = 0;
   while (millis() - time0 < 10000) {
     digitalWrite(s1, HIGH);
@@ -304,11 +299,20 @@ void message_dead() {
 void color_bounceFADE() {                    //-m6-BOUNCE COLOR (SIMPLE MULTI-LED FADE)
     if (p_sens == 1 && digitalRead(sens) == LOW)
     {
+      
       digitalWrite(SSerialTxControl, HIGH);
-      Serial.println(stringitem);
+      RS485Serial.println(stringitem);
       digitalWrite(zamok2, HIGH);
-      delay(1000);
+      delay(delay_lock);
       digitalWrite(zamok2, LOW);
+      digitalWrite(s1, LOW);
+      digitalWrite(s2, LOW);
+      digitalWrite(s3, LOW);
+      digitalWrite(s4, LOW);
+      one_color_all(0, 0, 0);          // погасить все светодиоды
+      LEDS.show();                     // отослать команду
+      digitalWrite(light, LOW);
+      delay(15000);
       digitalWrite(SSerialTxControl, LOW);
       p_sens = 0;
       start = 0;
@@ -317,117 +321,61 @@ void color_bounceFADE() {                    //-m6-BOUNCE COLOR (SIMPLE MULTI-LE
     }
 
   if (start == 1) {
-
     idex = idex + 1;
     if (idex == LED_COUNT  ) {
       idex = 0;
     }
-
-
     int iL1 = adjacent_cw(idex);
     int iL2 = adjacent_cw(iL1);
     int iL3 = adjacent_cw(iL2);
     int iL4 = adjacent_cw(iL3);
+    int iL5 = adjacent_cw(iL4);
     int iR1 = adjacent_ccw(idex);
     int iR2 = adjacent_ccw(iR1);
     int iR3 = adjacent_ccw(iR2);
     int iR4 = adjacent_ccw(iR3);
+    int iR5 = adjacent_ccw(iR4);
     for (int i = 0; i < LED_COUNT; i++ ) {
-        if (Serial.available()) {
-    tx();
-  }
-
-
+      if (RS485Serial.available()) {
+        string = "";
+        delay(100);
+        tx();
+      }
       if (i == idex) {
         leds0[i] = CHSV(thishue, thissat, 25*brightness);
-        leds1[i] = CHSV(thishue, thissat, 25*brightness);
-        leds2[i] = CHSV(thishue, thissat, 25*brightness);
-        leds3[i] = CHSV(thishue, thissat, 25*brightness);
-        leds4[i] = CHSV(thishue, thissat, 25*brightness);
-        leds5[i] = CHSV(thishue, thissat, 25*brightness);
-        leds6[i] = CHSV(thishue, thissat, 25*brightness);
-
       }
       else if (i == iL1) {
         leds0[i] = CHSV(thishue, thissat, 20*brightness);
-        leds1[i] = CHSV(thishue, thissat, 20*brightness);
-        leds2[i] = CHSV(thishue, thissat, 20*brightness);
-        leds3[i] = CHSV(thishue, thissat, 20*brightness);
-        leds4[i] = CHSV(thishue, thissat, 20*brightness);
-        leds5[i] = CHSV(thishue, thissat, 20*brightness);
-        leds6[i] = CHSV(thishue, thissat, 20*brightness);
       }
       else if (i == iL2) {
-        leds0[i] = CHSV(thishue, thissat, 15*brightness);
-        leds1[i] = CHSV(thishue, thissat, 15*brightness);
-        leds2[i] = CHSV(thishue, thissat, 15*brightness);
-        leds3[i] = CHSV(thishue, thissat, 15*brightness);
-        leds4[i] = CHSV(thishue, thissat, 15*brightness);
-        leds5[i] = CHSV(thishue, thissat, 15*brightness);
-        leds6[i] = CHSV(thishue, thissat, 15*brightness);
+        leds0[i] = CHSV(thishue, thissat, 16*brightness);
       }
       else if (i == iL3) {
-        leds0[i] = CHSV(thishue, thissat, 8*brightness);
-        leds1[i] = CHSV(thishue, thissat, 8*brightness);
-        leds2[i] = CHSV(thishue, thissat, 8*brightness);
-        leds3[i] = CHSV(thishue, thissat, 8*brightness);
-        leds4[i] = CHSV(thishue, thissat, 8*brightness);
-        leds5[i] = CHSV(thishue, thissat, 8*brightness);
-        leds6[i] = CHSV(thishue, thissat, 8*brightness);
+        leds0[i] = CHSV(thishue, thissat, 12*brightness);
       }
       else if (i == iL4) {
+        leds0[i] = CHSV(thishue, thissat, 7*brightness);
+      }
+      else if (i == iL5) {
         leds0[i] = CHSV(thishue, thissat, 2*brightness);
-        leds1[i] = CHSV(thishue, thissat, 2*brightness);
-        leds2[i] = CHSV(thishue, thissat, 2*brightness);
-        leds3[i] = CHSV(thishue, thissat, 2*brightness);
-        leds4[i] = CHSV(thishue, thissat, 2*brightness);
-        leds5[i] = CHSV(thishue, thissat, 2*brightness);
-        leds6[i] = CHSV(thishue, thissat, 2*brightness);
       }
       else if (i == iR1) {
         leds0[i] = CHSV(thishue, thissat, 20*brightness);
-        leds1[i] = CHSV(thishue, thissat, 20*brightness);
-        leds2[i] = CHSV(thishue, thissat, 20*brightness);
-        leds3[i] = CHSV(thishue, thissat, 20*brightness);
-        leds4[i] = CHSV(thishue, thissat, 20*brightness);
-        leds5[i] = CHSV(thishue, thissat, 20*brightness);
-        leds6[i] = CHSV(thishue, thissat, 20*brightness);
       }
       else if (i == iR2) {
-        leds0[i] = CHSV(thishue, thissat, 15*brightness);
-        leds1[i] = CHSV(thishue, thissat, 15*brightness);
-        leds2[i] = CHSV(thishue, thissat, 15*brightness);
-        leds3[i] = CHSV(thishue, thissat, 15*brightness);
-        leds4[i] = CHSV(thishue, thissat, 15*brightness);
-        leds5[i] = CHSV(thishue, thissat, 15*brightness);
-        leds6[i] = CHSV(thishue, thissat, 15*brightness);
+        leds0[i] = CHSV(thishue, thissat, 16*brightness);
       }
       else if (i == iR3) {
-        leds0[i] = CHSV(thishue, thissat, 8*brightness);
-        leds1[i] = CHSV(thishue, thissat, 8*brightness);
-        leds2[i] = CHSV(thishue, thissat, 8*brightness);
-        leds3[i] = CHSV(thishue, thissat, 8*brightness);
-        leds4[i] = CHSV(thishue, thissat, 8*brightness);
-        leds5[i] = CHSV(thishue, thissat, 8*brightness);
-        leds6[i] = CHSV(thishue, thissat, 8*brightness);
+        leds0[i] = CHSV(thishue, thissat, 12*brightness);
       }
       else if (i == iR4) {
+        leds0[i] = CHSV(thishue, thissat, 7*brightness);
+      }
+      else if (i == iR5) {
         leds0[i] = CHSV(thishue, thissat, 2*brightness);
-        leds1[i] = CHSV(thishue, thissat, 2*brightness);
-        leds2[i] = CHSV(thishue, thissat, 2*brightness);
-        leds3[i] = CHSV(thishue, thissat, 2*brightness);
-        leds4[i] = CHSV(thishue, thissat, 2*brightness);
-        leds5[i] = CHSV(thishue, thissat, 2*brightness);
-        leds6[i] = CHSV(thishue, thissat, 2*brightness);
       }
       else {
         leds0[i] = CHSV(0, 0, 0);
-        leds1[i] = CHSV(0, 0, 0);
-        leds2[i] = CHSV(0, 0, 0);
-        leds3[i] = CHSV(0, 0, 0);
-        leds4[i] = CHSV(0, 0, 0);
-        leds5[i] = CHSV(0, 0, 0);
-        leds6[i] = CHSV(0, 0, 0);
       }
     }
     LEDS.show();
@@ -464,12 +412,11 @@ void one_color_all(int cred, int cgrn, int cblu) {       //-SET ALL LEDS TO ONE 
   for (int i = 0 ; i < LED_COUNT; i++ ) {
     leds0[i].setRGB( cred, cgrn, cblu);
     leds1[i].setRGB( cred, cgrn, cblu);
-    leds2[i].setRGB( cred, cgrn, cblu);
-    leds3[i].setRGB( cred, cgrn, cblu);
-    leds4[i].setRGB( cred, cgrn, cblu);
-    leds5[i].setRGB( cred, cgrn, cblu);
-    leds6[i].setRGB( cred, cgrn, cblu);
-
+  }
+}
+void one_color_red(){
+  for (int i = 7 ; i < 12; i++ ) {
+    leds1[i].setRGB( 255, 0, 0);
   }
 }
 

@@ -63,7 +63,6 @@ void setup()
     pinMode(SSerialTxControl, OUTPUT); 
     digitalWrite(SSerialTxControl, LOW); 
     RS485Serial.begin(9600); 
-   // pinMode(irsend, OUTPUT);
     pinMode(13, OUTPUT);
     pinMode(Sens0, INPUT);
     pinMode(Sens1, INPUT);
@@ -103,16 +102,15 @@ void loop()
   
   s=p1+p2+p3+p4+p5+p6+p7+p0;
   if( s == 4) {
-    if( p0==1 && p1==1 && p4==1 && p6==1){ lightOff(); RS485Serial.println(stringgood); s=0; p=0;}
-    else{RS485Serial.println(stringbad); delay(1000); lightOff();  lightOn();  lightOff();  lightOn();  lightOff();  lightOn(); s=0;}
+    if( p0==1 && p1==1 && p4==1 && p6==1){ lightOff();digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringgood); s=0; p=0;}
+    else{digitalWrite(SSerialTxControl, HIGH);RS485Serial.println(stringbad); delay(1000); lightOff();  lightOn();  lightOff();  lightOn();  lightOff();  lightOn(); s=0;}
   }
-  if(s>4) {RS485Serial.println(stringbad); delay(1000); lightOff(); lightOn();  lightOff();  lightOn(); lightOff();  lightOn(); s=0;}
+  if(s>4) {digitalWrite(SSerialTxControl, HIGH);RS485Serial.println(stringbad); delay(1000); lightOff(); lightOn();  lightOff();  lightOn(); lightOff();  lightOn(); s=0;}
     
   
   }
   
   digitalWrite(SSerialTxControl, LOW);
-  digitalWrite(13,LOW);
    if (RS485Serial.available()) {
     string = "";
   delay(100);
