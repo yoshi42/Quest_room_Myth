@@ -25,7 +25,6 @@ void setup()
     pinMode(SSerialTxControl, OUTPUT); 
     digitalWrite(SSerialTxControl, LOW); 
     RS485Serial.begin(9600); 
-   // pinMode(irsend, OUTPUT);
     pinMode(13, OUTPUT);
     pinMode(MHSens, INPUT);
     pinMode(dirOutPin, OUTPUT);

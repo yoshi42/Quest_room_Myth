@@ -166,7 +166,9 @@ void setup() {
 }
 
 void loop() {
-  digitalWrite(SSerialTxControl, LOW);
+  digitalWrite(SSerialTxControl, HIGH);
+  Serial1.println(Master_Heart_1);
+  delay(1000);
   if (Serial1.available()) {
     string_reply = "";
     delay(100);
