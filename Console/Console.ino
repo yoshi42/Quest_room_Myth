@@ -108,7 +108,7 @@ void button_message() {
     p_switch=0;
   }
   if(digitalRead(red_button)==LOW && p_red_button==0){
-    RS485Serial.println("stop#");
+    RS485Serial.println("reset#");
     p_red_button=1;
   }
   if(digitalRead(red_button)==HIGH && p_red_button==1){

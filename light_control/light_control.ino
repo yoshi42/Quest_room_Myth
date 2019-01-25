@@ -26,6 +26,9 @@ String string3 = "Master_Light_kor3#";
 String string4 = "Master_Light_kor4#";
 String string5 = "Master_Light_office#";
 String string6 = "Master_Light_off#";
+String string7 = "Master_Light_rele1#";         //дим машина
+String string8 = "Master_Light_rele2#";
+String string9 = "Master_Light_rele3#";
 
 String string;
 unsigned long i = 0;
@@ -55,6 +58,9 @@ void setup() {
     analogWrite(light_kor5, 0);
     analogWrite(light_kor6, 0);
     digitalWrite(light_office, HIGH);
+    digitalWrite(rele_1, HIGH);
+    digitalWrite(rele_2, HIGH);
+    digitalWrite(rele_3, HIGH);
 }
 
 void loop() {  
@@ -103,6 +109,18 @@ void tx() {                          // розпізнання команди
       {
          message_off();
       }
+      if (string.equals(string7))
+      {
+         message_rele1();
+      }
+      if (string.equals(string8))
+      {
+         message_rele2();
+      }
+      if (string.equals(string9))
+      {
+         message_rele3();
+      }
       
     string = "";
     }
@@ -138,6 +156,17 @@ void message_kor4(){
 }
 void message_office(){
   digitalWrite(light_office, LOW);
+}
+void message_rele1(){
+  digitalWrite(rele_1, LOW);
+  delay(3000);
+  digitalWrite(rele_1, HIGH);
+}
+void message_rele2(){
+  digitalWrite(rele_2, LOW);
+}
+void message_rele3(){
+  digitalWrite(rele_3, LOW);
 }
 void message_off(){
   analogWrite(light_kor1, 0);
