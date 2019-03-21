@@ -147,33 +147,49 @@ int K12_stolik_lock = 13;         //столиK под радиолу
 int K4_tel_sol = 12;             //телефон 1
 int K8_balls_lock = 11;          //замоK шара в стене
 int K9_balls_sol = 10;           //соленоид шара
-int S2_viselitsa = 23;           //вход от виселицы
 int K16_cal_maya_lock = 9;        //замоK Kалендаря майя
 int K5_balka1 = 8;               //Падающая часть потолKа
 int K6_balka2 = 7;               //------//------
 int K7_balka3 = 6;               //------//------
 int K2_doors1 = 5;               //Двери в офис - 12В ЕМЗ двери
 int K3_doors1_led = 4;           //подсветKа  - 12В LED лампа
-int K10_doors2 = 3;
+int K10_doors2 = 3;				 //Двери в офис - 12В ЕМЗ двери
 int K11_doors2_led = 2;           // - 12В LED лампа
 int K1_stenka_k0k1 = 32;         //фальш стенKи - 12В стенKаKух-K1
 int K15_stenka_k2of = 34;         //- 12B стенKаK2-Оф
 int K16_stenka_k0of = 36;         //- 12В стенKа Kух-Оф
 int K17_stenka4_k2ex = 38;        //- 12 стенKа K2-Вых
-int S1_vikl = 25;               //вход от выKлючателя
-int S3_led = 29;                //5В светодиод
-int SSTxD22_pl_music = 22;    //
-int SSRxD24_pl_music = 24;    //- плеер музыKа
-int K18_kor1_mute = 26;           //
-int K19_kor2_mute = 28;           //
+
+//Подвод питания через 8-ch MOSFET на девайсы с ШД
+int M1_polka1 = 53;
+int M2_polka2 = 51;
+int M3_hands1 = 49;
+int M4_hands2 = 47;
+int M5_photos1 = 45;
+int M6_photos2 = 43;
+int M7_K13_XO = 41;
+int M8 = 39;
+
+//Входы на ОСУ от датчиков и кнопок
+int S2_viselitsa = 25;          //вход от виселицы S2
+int S1_vikl = 27;               //вход от выKлючателя S1
+int S3_led = 31;                //5В светодиод выключатель S3
+int S4sens1_doors1 = 33;          //геркон на двери 1 S4
+int S5sens1_doors1 = 35;          //геркон на двери 2 S5
+int S6_sens_moveK1 = 29;		//Вход от датчика движения Кор1 S6
+int S7_sens_moveK2 = 23;		//Вход от датчика движения Кор2 S7
+
+
+int SSRxD42_pl_music = 42;    // Rx плеер музыKа 
+int SSRxD44_pl_eff = 44;      // Tx плеер эффекты
+
+int SSTxD22_pl_music = 22;    // Tx плеер музыKа
+int SSTxD24_pl_eff = 24;      // Tx плеер эффекты
+int K18_kor1_mute = 26;           // - выводы на mute
+int K19_kor2_mute = 28;           // - выводы на mute
 int K20_off_mute = 30;            //- выводы на mute
+
 int K13_XO_lock = 27;             //- 12В на замоK Kартины KрестиKи-нолиKи
-int stroboscope1 = 31;            // стробоскоп 
-int stroboscope2 = 33;
-int sens1_doors1 = 40;            //геркон на двери 1
-int sens1_doors2 = 42;            //геркон на двери 2
-int sens2_doors1 = 44;            //датчик движения двери 1
-int sens2_doors2 = 44;            //датчик движения двери 2
 //==============================================================================
 
 
@@ -204,23 +220,27 @@ unsigned long time_viselitsa = 0;
 unsigned long time_stroboscope = 0;
 unsigned long time_phone = 0;
 
-SoftwareSerial pl_musicSerial(SSRxD24_pl_music, SSTxD22_pl_music); // RX, TX плеер музыKа
+SoftwareSerial pl_musicSerial(SSRxD42_pl_music, SSTxD22_pl_music); // RX, TX плеер музыKа
+SoftwareSerial pl_effectsSerial(SSRxD44_pl_eff, SSTxD24_pl_eff); // RX, TX плеер музыKа
+
 void setup() {
-    Serial.begin(9600);
+    Serial.begin(9600);						  //UART
     Serial1.begin(9600);                      //RS485
+    pl_musicSerial.begin(9600);               //плеер музыKа
+    pl_effectsSerial.begin(9600);             // плеер эффеKты+теKст
+
     pinMode(SSerialTxControl, OUTPUT); 
     digitalWrite(SSerialTxControl, LOW); 
-    pl_musicSerial.begin(9600);               //плеер музыKа
-    Serial2.begin(9600);                      // плеер эффеKты+теKст
-    mp3_set_serial (Serial2);                //   софтовый серийный порт для мп3
+    mp3_set_serial (pl_musicSerial);                //   софтовый серийный порт для мп3
     delay (100);                              //  обязательная задержка между командами
     mp3_set_volume (30);
+
     pinMode(S2_viselitsa, INPUT_PULLUP); 
     pinMode(S1_vikl, INPUT_PULLUP); 
-    pinMode(sens1_doors1, INPUT_PULLUP); 
-    pinMode(sens2_doors1, INPUT); 
-    pinMode(sens1_doors2, INPUT_PULLUP); 
-    pinMode(sens2_doors2, INPUT); 
+    pinMode(S4sens1_doors1, INPUT_PULLUP); 
+    pinMode(S6_sens_moveK1, INPUT); 
+    pinMode(S5sens1_doors1, INPUT_PULLUP); 
+    pinMode(S7_sens_moveK2, INPUT); 
     pinMode(S3_led, OUTPUT);   
     pinMode(K12_stolik_lock, OUTPUT);          
     pinMode(K4_tel_sol, OUTPUT);
@@ -242,7 +262,24 @@ void setup() {
   pinMode(K19_kor2_mute, OUTPUT);
   pinMode(K20_off_mute, OUTPUT);
   pinMode(K13_XO_lock, OUTPUT);
-    
+
+  pinMode(M1_polka1, OUTPUT);
+  pinMode(M2_polka2, OUTPUT);
+  pinMode(M3_hands1, OUTPUT);
+  pinMode(M4_hands2, OUTPUT);
+  pinMode(M5_photos1, OUTPUT);
+  pinMode(M6_photos2, OUTPUT);
+  pinMode(M7_K13_XO, OUTPUT);
+  pinMode(M8, OUTPUT);
+
+  digitalWrite(M1_polka1, LOW);
+  digitalWrite(M2_polka2, LOW);
+  digitalWrite(M3_hands1, LOW);
+  digitalWrite(M4_hands2, LOW);
+  digitalWrite(M5_photos1, HIGH);
+  digitalWrite(M6_photos2, HIGH);
+  digitalWrite(M7_K13_XO, LOW);
+  digitalWrite(M8, LOW);
     
 
 }
@@ -541,7 +578,7 @@ void functionStart(){
     flag = 7;
   }
   if(flag == 7){
-    while(digitalRead(sens1_doors2)==HIGH){           //пока дверь2 открыта
+    while(digitalRead(S5sens1_doors1)==HIGH){           //пока дверь2 открыта
       mp3_set_serial (Serial2);                             //переключить на мп3 эфектов
       delay (100);
       if(language==1){                                    //в зависимости от языка прохождения вкл плеер и эффектами аудио "уходите" (НОМЕР УТОЧНИТЬ)
@@ -556,7 +593,7 @@ void functionStart(){
       delay(10000);                                         //ПОДОБРАТЬ ЗНАЧЕНИЕ
       //затухание света кор1
     }
-    if(digitalRead(sens1_doors2)==LOW){                 //если дверь закрылась(ДОБАВИТЬ ДАТЧИК ДВИЖЕНИЯ)
+    if(digitalRead(S5sens1_doors1)==LOW){                 //если дверь закрылась(ДОБАВИТЬ ДАТЧИК ДВИЖЕНИЯ)
       mp3_stop();
       flag = 8;
       
@@ -640,7 +677,7 @@ void functionStart(){
     }
   }
   if(flag == 12){
-    while(digitalRead(sens1_doors1)==HIGH){           //пока дверь1 открыта
+    while(digitalRead(S4sens1_doors1)==HIGH){           //пока дверь1 открыта
       mp3_set_serial (Serial2);                             //переключить на мп3 эфектов
       delay (100);
       if(language==1){                                    //в зависимости от языка прохождения вкл плеер c эффектами аудио "уходите" (НОМЕР УТОЧНИТЬ)
@@ -655,7 +692,7 @@ void functionStart(){
       delay(10000);                                         //ПОДОБРАТЬ ЗНАЧЕНИЕ
       //затухание света кор2
     }
-    if(digitalRead(sens1_doors1)==LOW){                 //если дверь закрылась(ДОБАВИТЬ ДАТЧИК ДВИЖЕНИЯ)
+    if(digitalRead(S4sens1_doors1)==LOW){                 //если дверь закрылась(ДОБАВИТЬ ДАТЧИК ДВИЖЕНИЯ)
       mp3_stop();
       flag = 13;
     }
@@ -736,7 +773,7 @@ void functionStart(){
   if(flag==17){
      digitalWrite(SSerialTxControl, HIGH);                 //передача даних
      Serial1.println(Master_Light_kor2);               //тусклый свет кор2
-     while(digitalRead(sens1_doors2)==HIGH){           //пока дверь2 открыта
+     while(digitalRead(S5sens1_doors1)==HIGH){           //пока дверь2 открыта
       mp3_set_serial (Serial2);                             //переключить на мп3 эфектов
       delay (100);
       if(language==1){                                    //в зависимости от языка прохождения вкл плеєр c эффектами аудио "уходите" (НОМЕР УТОЧНИТЬ)
@@ -751,7 +788,7 @@ void functionStart(){
       delay(10000);                                         //ПОДОБРАТЬ ЗНАЧЕНИЕ
       //затухание света кор1
     }
-    if(digitalRead(sens1_doors2)==LOW){                 //если дверь закрылась(ДОБАВИТЬ ДАТЧИК ДВИЖЕНИЯ)
+    if(digitalRead(S5sens1_doors1)==LOW){                 //если дверь закрылась(ДОБАВИТЬ ДАТЧИК ДВИЖЕНИЯ)
       mp3_stop();                                     //остановить аудио
       flag = 18;
     }
@@ -825,7 +862,7 @@ void functionStart(){
 
  //===============================КОРИДОР 1======================================
   if(flag==25){
-     if(digitalRead(sens1_doors1)==LOW){                 //если дверь закрылась (ДОБАВИТЬ ДАТЧИК ДВИЖЕНИЯ)
+     if(digitalRead(S4sens1_doors1)==LOW){                 //если дверь закрылась (ДОБАВИТЬ ДАТЧИК ДВИЖЕНИЯ)
       digitalWrite(SSerialTxControl, HIGH);                 //передача даних
       Serial1.println(Master_Light_office);               //вкл свет в офисе
       Serial1.println(Master_Heart_1);                    //вкл серце скорость 1
@@ -908,7 +945,7 @@ void functionStart(){
   }
    
   if(flag==31){
-    if(digitalRead(sens2_doors2)==HIGH){                             //если сработал датчик движения в кор2
+    if(digitalRead(S7_sens_moveK2)==HIGH){                             //если сработал датчик движения в кор2
       digitalWrite(K5_balka1, HIGH);                         //выпадает 1 балка
       delay(1000);
       digitalWrite(K6_balka2, HIGH);                         //выпадает 2 балка
@@ -997,20 +1034,10 @@ void functionStroboscope(){                           //стробоскоп
       digitalWrite(K10_doors2, LOW);
       digitalWrite(K1_stenka_k0k1, LOW);
     }
-    
-    digitalWrite(stroboscope1, HIGH);
-    delay(100);
-    digitalWrite(stroboscope1, LOW);
-    delay(100);
   }
-  digitalWrite(stroboscope1, LOW);
   while(millis()-time_stroboscope>10000 && millis()-time_stroboscope<15000){
-    digitalWrite(stroboscope2, HIGH);
-    delay(50);
-    digitalWrite(stroboscope2, LOW);
-    delay(50);
+  //stroboscope effect  	
   }
-  digitalWrite(stroboscope2, LOW);
   
 }
 

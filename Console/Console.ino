@@ -36,6 +36,7 @@ int res2_2 = 0;
 
 String message_res1 = "_res1#";
 String message_res2 = "_res2#";
+String string;
 
 char keys[4][5]={
  {'1','2','3','4','5'},
@@ -61,7 +62,7 @@ void setup()
 {
  Serial.begin(9600);
  pinMode(SSerialTxControl, OUTPUT);
- digitalWrite(SSerialTxControl, HIGH);
+ digitalWrite(SSerialTxControl, LOW); // LOW - прием
  RS485Serial.begin(9600);
 
  pinMode(green_button, INPUT_PULLUP);
@@ -77,11 +78,26 @@ void setup()
  
 void loop()
 {
-  digitalWrite(SSerialTxControl, HIGH);
   button_radio_message();
   keypad_message();
   button_message();
   resistor_message();
+  tx();
+}
+
+void tx() {                          // розпізнання команди
+  while (Serial.available())
+  {
+    char inChar = Serial.read();
+    string += inChar;
+    if (inChar == '#')
+    {
+        digitalWrite(SSerialTxControl, HIGH); //включаем режим передачи
+        RS485Serial.println(string);
+        digitalWrite(SSerialTxControl, LOW); //выключаем режим передачи
+    string = "";
+    }
+  }
 }
 
 void button_message() {
@@ -172,25 +188,24 @@ void button_radio_message() {
 
 void keypad_message() {
  char pressed=keypad.getKey();
- if(pressed=='1'){RS485Serial.println("1#"); }
- if(pressed=='2'){RS485Serial.println("2#"); }
- if(pressed=='3'){RS485Serial.println("3#"); }
- if(pressed=='4'){RS485Serial.println("4#"); }
- if(pressed=='5'){RS485Serial.println("5#"); }
- if(pressed=='6'){RS485Serial.println("6#"); }
- if(pressed=='7'){RS485Serial.println("7#"); }
- if(pressed=='8'){RS485Serial.println("8#"); }
- if(pressed=='9'){RS485Serial.println("9#"); }
- if(pressed=='0'){RS485Serial.println("0#"); }
- if(pressed=='A'){RS485Serial.println("A#"); }
- if(pressed=='B'){RS485Serial.println("B#"); }
- if(pressed=='C'){RS485Serial.println("C#"); }
- if(pressed=='D'){RS485Serial.println("D#"); }
- if(pressed=='E'){RS485Serial.println("E#"); }
- if(pressed=='F'){RS485Serial.println("F#"); }
- if(pressed=='G'){RS485Serial.println("G#"); }
- if(pressed=='H'){RS485Serial.println("H#"); }
- if(pressed=='I'){RS485Serial.println("I#"); }
- if(pressed=='J'){RS485Serial.println("J#"); }
+ if(pressed=='1'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("1#"); }
+ if(pressed=='2'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("Master_Light_off#");Serial.println("Master_Light_off#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='3'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("Master_Light_on#");Serial.println("Master_Light_on#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='4'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("Master_Heart_on#");Serial.println("Master_Heart_on#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='5'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("Master_Heart_1#");Serial.println("Master_Heart_1#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='6'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("Master_Heart_off#");Serial.println("Master_Heart_off#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='7'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("Master_Photos1_on#");Serial.println("Master_Photos1_on#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='8'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("Master_Photos1_change#");Serial.println("Master_Photos1_change#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='9'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("Master_Photos1_back#");Serial.println("Master_Photos1_back#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='0'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("Master_Photos1_off#");Serial.println("Master_Photos1_off#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='A'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("Master_Photos2_change#");Serial.println("Master_Photos2_change#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='B'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("Master_Photos2_back#");Serial.println("Master_Photos2_back#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='C'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("Master_hands1_on#");Serial.println("Master_hands1_on#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='D'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("Master_hands2_on#");Serial.println("Master_hands2_on#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='E'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("Master_mirror_heb#");Serial.println("Master_mirror_heb#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='F'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("F#");Serial.println("Master_Light_off#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='G'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("G#");Serial.println("Master_Light_off#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='H'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("H#");Serial.println("Master_Light_off#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='I'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("I#");Serial.println("Master_Light_off#"); digitalWrite(SSerialTxControl, LOW);}
+ if(pressed=='J'){digitalWrite(SSerialTxControl, HIGH);RS485Serial.println("J#");Serial.println("Master_Light_off#"); digitalWrite(SSerialTxControl, LOW);}
 }
-

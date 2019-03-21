@@ -8,6 +8,7 @@
 
 int dirOutPin = 5;
 int stepOutPin = 6;
+int enPin = 13;
 int MHSens = 9;              //концевик
 int a=0;                    //счетчик
 
@@ -25,10 +26,11 @@ void setup()
     pinMode(SSerialTxControl, OUTPUT); 
     digitalWrite(SSerialTxControl, LOW); 
     RS485Serial.begin(9600); 
-    pinMode(13, OUTPUT);
     pinMode(MHSens, INPUT);
     pinMode(dirOutPin, OUTPUT);
     pinMode(stepOutPin, OUTPUT);
+    pinMode(enPin, OUTPUT);
+    digitalWrite(enPin, LOW);
    
 }
 
@@ -67,6 +69,7 @@ loop();
 
 void change() {
 
+  //digitalWrite(enPin, HIGH);
   while (digitalRead(MHSens)==HIGH )
       {
        
@@ -74,23 +77,25 @@ void change() {
 
       digitalWrite(stepOutPin, LOW);
 
-      delayMicroseconds(800);
+      delayMicroseconds(1600);
 
       digitalWrite(stepOutPin, HIGH);
       }
+      //digitalWrite(enPin, LOW);
 }
 
 void back() {
+  //digitalWrite(enPin, HIGH);
       while(a<4000 ){
         a++;
        digitalWrite(dirOutPin, HIGH);
 
       digitalWrite(stepOutPin, LOW);
 
-      delayMicroseconds(800);
+      delayMicroseconds(1600);
 
       digitalWrite(stepOutPin, HIGH);
       }
-  
+  //digitalWrite(enPin, LOW);
 }
 
