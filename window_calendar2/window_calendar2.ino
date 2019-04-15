@@ -25,11 +25,26 @@ Off 807C50AF
 #include <IRremote.h>
 #include <SoftwareSerial.h>
 
-#define SSerialRX        12  //Serial Receive pin
-#define SSerialTX        11  //Serial Transmit pin
-#define SSerialTxControl 2   //RS485 Direction control
+#define SSerialRX        13  //12 Serial Receive pin
+#define SSerialTX        14  //11 Serial Transmit pin
+#define SSerialTxControl 15   //2 RS485 Direction control
 #define RS485Transmit    HIGH
 #define RS485Receive     LOW
+
+/*/ analog_communication: 
+A2,A3 - INput
+A4, A5 - output
+on: a2=1; a3=0
+next: a2=0;a3=1
+off: a2=0;a3=0
+
+good: a4=0
+bad: a5=0
+/*/
+#define anal_comm_a2 12
+#define anal_comm_a3 11
+#define anal_comm_a4 2
+#define anal_comm_a5 A5
 
 //int irsend = 3;
 int hollSens1= 4;            //датчик хола 
@@ -74,6 +89,14 @@ void setup()
     pinMode(hollSens4, INPUT_PULLUP);
     pinMode(hollSens5, INPUT_PULLUP);
     pinMode(hollSens6, INPUT_PULLUP);
+
+    pinMode(anal_comm_a2, INPUT_PULLUP);
+    pinMode(anal_comm_a3, INPUT_PULLUP); 
+
+    pinMode(anal_comm_a4, OUTPUT); //good
+    pinMode(anal_comm_a5, OUTPUT); //bad
+    digitalWrite(anal_comm_a4, HIGH); 
+    digitalWrite(anal_comm_a5, HIGH); 
 }
 
 void irblink()                               // перша команда
@@ -98,18 +121,18 @@ void irblink()                               // перша команда
 void loop() 
 { 
   if(p==1) {
-  if (digitalRead(hollSens1) == LOW && p1==0){digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringbad);delay(100);digitalWrite(SSerialTxControl, LOW); p1=1;p4=0;p5=0;p6=0;}
+  if (digitalRead(hollSens1) == LOW && p1==0){digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringbad); digitalWrite(anal_comm_a5,LOW);delay(500);digitalWrite(anal_comm_a5,HIGH);digitalWrite(SSerialTxControl, LOW); p1=1;p4=0;p5=0;p6=0;}
   if (digitalRead(hollSens1) == HIGH) {p1=0;}
-  if (digitalRead(hollSens2) == LOW && p2==0){digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringbad);delay(100);digitalWrite(SSerialTxControl, LOW); p2=1;p4=0;p5=0;p6=0;}
+  if (digitalRead(hollSens2) == LOW && p2==0){digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringbad);digitalWrite(anal_comm_a5,LOW);delay(500);digitalWrite(anal_comm_a5,HIGH);digitalWrite(SSerialTxControl, LOW); p2=1;p4=0;p5=0;p6=0;}
   if (digitalRead(hollSens2) == HIGH) {p2=0;}
-  if (digitalRead(hollSens3) == LOW && p3==0){digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringbad);delay(100);digitalWrite(SSerialTxControl, LOW); p3=1;p4=0;p5=0;p6=0;}
+  if (digitalRead(hollSens3) == LOW && p3==0){digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringbad);digitalWrite(anal_comm_a5,LOW);delay(500);digitalWrite(anal_comm_a5,HIGH);digitalWrite(SSerialTxControl, LOW); p3=1;p4=0;p5=0;p6=0;}
   if (digitalRead(hollSens3) == HIGH) {p3=0;}
   
   if (digitalRead(hollSens4) == LOW) {p4=1;}
   if (digitalRead(hollSens5) == LOW) {p5=1;}
   if (digitalRead(hollSens6) == LOW) {p6=1;}
    
-  if( p4==1 && p5==1 && p6==1) {digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringgood);delay(100);digitalWrite(SSerialTxControl, LOW); p=0;p4=0;p5=0;p6=0;}
+  if( p4==1 && p5==1 && p6==1) {digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringgood);digitalWrite(anal_comm_a4,LOW);delay(200);digitalWrite(anal_comm_a4,HIGH);digitalWrite(SSerialTxControl, LOW); p=0;p4=0;p5=0;p6=0;}
   }
   
   digitalWrite(SSerialTxControl, LOW);
@@ -119,6 +142,24 @@ void loop()
     delay(100);
     tx();
  }
+
+ if (digitalRead(anal_comm_a2) == HIGH && digitalRead(anal_comm_a3) == LOW)
+ {
+    delay(50);
+    irblink();
+    p=1;
+ }
+ if (digitalRead(anal_comm_a2) == LOW && digitalRead(anal_comm_a3) == HIGH)
+ {
+    delay(50);
+    irblink2();
+ }
+ if (digitalRead(anal_comm_a2) == LOW && digitalRead(anal_comm_a3) == LOW)
+ {
+    delay(50);
+    irblink1();
+ }
+
 }
 
 void tx() {                          // розпізнання команди

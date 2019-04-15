@@ -1,10 +1,9 @@
 #include <SoftwareSerial.h>
-
+/*
 #define SSerialRX        4  //Serial Receive pin
 #define SSerialTX        3  //Serial Transmit pin
 #define SSerialTxControl 2   //RS485 Direction control
-#define RS485Transmit    HIGH
-#define RS485Receive     LOW
+
 
 
 String string0 = "Master_Lampa_on#";
@@ -16,12 +15,39 @@ String string4 = "Master_Kletka_open2#";
 String stringbad = "Slave_Lampa_bad#";
 String stringgood = "Slave_Lampa_good#";
 String string;
+*/
+/*/Аналоговая коммуникация - замена RS485, коммуникация через жопу
+anal_comm_a9 INPUT_PULLUP
+anal_comm_a10 INPUT_PULLUP
+anal_comm_a10 OUTPUT
 
+       a12 a13 a14
+on      1   0   0
+start   1   1   0
+off     0   0   0
+open1   0   1   1
+open1   0   1   0
 
-int SensR = 4;        // датчики холла
-int SensG = 5;
-int SensB = 6;
-int SensY = 7;
+good -  0   1
+bad     1 ` 0
+*/
+
+#define anal_comm_a12 2
+#define anal_comm_a13 3
+#define anal_comm_a14 A3 
+
+#define anal_comm_a15 12
+#define anal_comm_52 13
+int flag_on = 0;
+int flag_start = 0;
+int flag_off = 0;
+int flag_open1 = 0;
+int flag_open2 = 0;
+
+int SensR = A4;        // датчики холла
+int SensG = A5;
+int SensB = A6;
+int SensY = A7;
 
 int sens =500;
 
@@ -53,16 +79,16 @@ unsigned long time1 = 0;
 unsigned long time2 = 0;
 unsigned long time3 = 0;
 int del = 3000;
-SoftwareSerial RS485Serial(SSerialRX, SSerialTX); // RX, TX
+//SoftwareSerial RS485Serial(SSerialRX, SSerialTX); // RX, TX
 
 void setup()
 {
     Serial.begin(9600);
-    pinMode(SSerialTxControl, OUTPUT); 
-    digitalWrite(SSerialTxControl, LOW); 
-    RS485Serial.begin(9600); 
+    //pinMode(SSerialTxControl, OUTPUT); 
+   // digitalWrite(SSerialTxControl, LOW); 
+    //RS485Serial.begin(9600); 
    // pinMode(irsend, OUTPUT);
-    pinMode(13, OUTPUT);
+    //pinMode(13, OUTPUT);
     pinMode(SensR, INPUT_PULLUP);
     pinMode(SensG, INPUT_PULLUP);
     pinMode(SensB, INPUT_PULLUP);
@@ -77,6 +103,13 @@ void setup()
     pinMode(lampR, OUTPUT);
     pinMode(lampG, OUTPUT);
     pinMode(lampB, OUTPUT);
+    pinMode(anal_comm_a12, INPUT_PULLUP);                     
+    pinMode(anal_comm_a13, INPUT_PULLUP);                      
+    pinMode(anal_comm_a14, INPUT_PULLUP);
+    pinMode(anal_comm_a15, OUTPUT);                      
+    pinMode(anal_comm_52, OUTPUT);
+    digitalWrite(anal_comm_a15,HIGH);
+    digitalWrite(anal_comm_52,HIGH);
     
     digitalWrite(Zamok, HIGH);
     digitalWrite(Zamok2, HIGH);
@@ -84,84 +117,146 @@ void setup()
     digitalWrite(Vibr, HIGH);
     LightOff();
 
+    LampR();
+    delay(400);
+    LampOff();
+    LampG();
+    delay(400);
+    LampOff();
+    LampB();
+    delay(400);
+    LampOff();
+
 }
 
 
-void loop() {
-  digitalWrite(SSerialTxControl, LOW);
-if(RS485Serial.available()){
-  string = "";
-  delay(100);
+void loop() 
+{
+ 
  tx(); 
 }
 
-}
-
-
-
 void tx() {                          // розпізнання команди
-  digitalWrite(SSerialTxControl, LOW);
-  while (RS485Serial.available())
-  {
-    char inChar = RS485Serial.read();
-    string += inChar;
-    if (inChar == '#') 
-    {
-      if (string.equals(string0))
-      {
-          LightW();
+  if (digitalRead(anal_comm_a12) == HIGH && digitalRead(anal_comm_a13) == LOW && digitalRead(anal_comm_a14) == LOW && flag_on == 0)
+ {
+    delay(150);
+    flag_on = 1;
+ }
+ if(flag_on==1){
+    LightW();
           digitalWrite(Zamok, LOW);
           delay(1000);
           digitalWrite(Zamok, HIGH);
-      }
-      if (string.equals(string1) )
-      {
-         LightOff();
+    flag_on = 2;
+ }
+ if (digitalRead(anal_comm_a12) == HIGH && digitalRead(anal_comm_a13) == HIGH && digitalRead(anal_comm_a14) == LOW && flag_start == 0)
+ {
+    delay(150);
+    flag_start = 1;
+ }
+ if(flag_start==1){
+    LightOff();
          LampW();
          time0=millis();
          s=0;
          r=0;
          p=0;
          game();
-         
-      }
-      if (string.equals(string2))
-      {
-          p=1; 
+    flag_start = 2;
+ }
+ if (digitalRead(anal_comm_a12) == LOW && digitalRead(anal_comm_a13) == LOW && digitalRead(anal_comm_a14) == LOW && flag_off == 0)
+ {
+    delay(50);
+    flag_off = 1;
+ }
+ if(flag_off==1){
+    p=1; 
          game();
-                
-      }  
-      
-      if (string.equals(string3))
-      {
-          digitalWrite(Zamok, LOW);
+    flag_off = 2;
+ }
+ if (digitalRead(anal_comm_a12) == LOW && digitalRead(anal_comm_a13) == HIGH && digitalRead(anal_comm_a14) == HIGH && flag_open1 == 0)
+ {
+    delay(50);
+    flag_open1 = 1;
+ }
+ if(flag_open1==1){
+    digitalWrite(Zamok, LOW);
+    delay(1000);
+    digitalWrite(Zamok, HIGH);
+    flag_open1 = 2;
+ }
+if (digitalRead(anal_comm_a12) == LOW && digitalRead(anal_comm_a13) == LOW && digitalRead(anal_comm_a14) == HIGH && flag_open2 == 0)
+ {
+    delay(50);
+    flag_open2 = 1;
+ }
+ if(flag_open2==1){
+    digitalWrite(Zamok2, LOW);
           delay(1000);
-          digitalWrite(Zamok, HIGH);       
-      } 
-      if (string.equals(string4))
-      {
-          digitalWrite(Zamok2, LOW);
-          delay(1000);
-          digitalWrite(Zamok2, HIGH);       
-      }    
-    string = "";
-    }
-}
-loop();
+          digitalWrite(Zamok2, HIGH); 
+    flag_open2 = 2;
+ }
+ if (digitalRead(anal_comm_a12) == HIGH && digitalRead(anal_comm_a13) == HIGH && digitalRead(anal_comm_a14) == HIGH){
+   flag_on = 0;
+   flag_start = 0;
+   flag_off = 0;
+   flag_open1 = 0;
+   flag_open2 = 0;
+ }
 }
 
 void game() {               //основна ігра
   if(p==1){LightOff();
          LampOff();}
   while(p==0){
-    digitalWrite(SSerialTxControl, LOW);
+    
     digitalWrite(Zamok, HIGH);
     digitalWrite(Zamok2, HIGH);
     digitalWrite(Potolok, HIGH);
     digitalWrite(Vibr, HIGH);
-    if(Serial.available()){
-     tx(); 
-    }
+
+
+
+
+
+    if (digitalRead(anal_comm_a12) == LOW && digitalRead(anal_comm_a13) == LOW && digitalRead(anal_comm_a14) == LOW && flag_off == 0)
+ {
+    delay(50);
+    flag_off = 1;
+ }
+ if(flag_off==1){
+    p=1; 
+         //game();
+    time2=millis();
+    openDoor();
+    flag_off = 2;
+ }
+ if (digitalRead(anal_comm_a12) == LOW && digitalRead(anal_comm_a13) == HIGH && digitalRead(anal_comm_a14) == HIGH && flag_open1 == 0)
+ {
+    delay(50);
+    flag_open1 = 1;
+ }
+ if(flag_open1==1){
+    digitalWrite(Zamok, LOW);
+    delay(1000);
+    digitalWrite(Zamok, HIGH);
+    flag_open1 = 2;
+ }
+if (digitalRead(anal_comm_a12) == LOW && digitalRead(anal_comm_a13) == LOW && digitalRead(anal_comm_a14) == HIGH && flag_open2 == 0)
+ {
+    delay(50);
+    flag_open2 = 1;
+ }
+ if(flag_open2==1){
+    digitalWrite(Zamok2, LOW);
+          delay(1000);
+          digitalWrite(Zamok2, HIGH); 
+    flag_open2 = 2;
+ }
+
+
+
+
 
     if(millis()-time0<del){              //включення першого кольору
        LightG();
@@ -289,8 +384,13 @@ void game() {               //основна ігра
 
 
 void openDoor() {                           //
-  digitalWrite(SSerialTxControl, HIGH);
-  RS485Serial.println(stringgood);
+  //digitalWrite(SSerialTxControl, HIGH);
+  //RS485Serial.println(stringgood);
+  digitalWrite(anal_comm_a15,LOW);
+   digitalWrite(anal_comm_52,HIGH);
+   delay(500);
+   digitalWrite(anal_comm_a15,HIGH);
+   digitalWrite(anal_comm_52,HIGH);
   while(millis()-time2<20000){
     LightW();
     LampOff();
@@ -306,11 +406,16 @@ void openDoor() {                           //
       LightOff();
     }
   }
-  digitalWrite(SSerialTxControl, LOW);
+  //digitalWrite(SSerialTxControl, LOW);
 }
 void redBlink() {                       //неправильне виконання 
-  digitalWrite(SSerialTxControl, HIGH);
-  RS485Serial.println(stringbad);
+  //digitalWrite(SSerialTxControl, HIGH);
+  //RS485Serial.println(stringbad);
+  digitalWrite(anal_comm_a15,HIGH);
+   digitalWrite(anal_comm_52,LOW);
+    delay(500);
+   digitalWrite(anal_comm_a15,HIGH);
+   digitalWrite(anal_comm_52,HIGH);
   LampOff();
   time1=millis();
   time0=10*del;
@@ -347,7 +452,7 @@ void redBlink() {                       //неправильне виконан�
     digitalWrite(Vibr, HIGH);
     r=1;
     s=0;
-  digitalWrite(SSerialTxControl, LOW);
+  //digitalWrite(SSerialTxControl, LOW);
 }
 
 void LightW() {

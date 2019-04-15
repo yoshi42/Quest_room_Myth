@@ -39,6 +39,15 @@ void setup() {
   pinMode(mosfet, OUTPUT);
   pinMode(MHSens, INPUT);
   pinMode(stepOutPin, OUTPUT);
+
+  //При подачі живлення - просто запускати один раз сценарій
+  delay(3000);
+  a=0;
+  b=0;
+  mp3_play (1);
+  p=1;
+  digitalWrite(led, HIGH);
+  stepleft();
   
 }
 

@@ -1,7 +1,8 @@
 #include <SoftwareSerial.h>
 #define SSerialRX        8  //Serial Receive pin
 #define SSerialTX        3  //Serial Transmit pin
-#define SSerialTxControl 2   //RS485 Direction control
+#define SSerialTxControl 12   //RS485 Direction control (pin 2 - сейчас на него навешано аналоговое управление)
+#define anal_comm 2 //analog_communication - коммуникация через жопу, т.к. RS485 не работает
 #define RS485Transmit    HIGH
 #define RS485Receive     LOW
 
@@ -16,7 +17,6 @@ int               c = 0;
 String string0 = "Master_ShoeRack1_180deg#";
 String string;
 
-
 SoftwareSerial RS485Serial(SSerialRX, SSerialTX); // RX, TX
 
 void setup() 
@@ -29,18 +29,17 @@ void setup()
    pinMode(SSerialTxControl, OUTPUT); 
     digitalWrite(SSerialTxControl, LOW); 
     RS485Serial.begin(9600); 
-   
+   pinMode(anal_comm, INPUT_PULLUP);
     pinMode(13, OUTPUT);
     pinMode(dirOutPin, OUTPUT);
     pinMode(stepOutPin, OUTPUT);
 }
 
-void stepleft() {   //рухи руками
+void stepleft() {
 if(a=0){
   digitalWrite(Zamok,LOW);
   delay(300);
 } 
-
       while (digitalRead(MHSens)==HIGH || p<500)
       {
         p++;
@@ -56,7 +55,6 @@ if(a=0){
       delayMicroseconds(1000);
       
       }
-   
 }
 
 void loop() {
@@ -64,7 +62,15 @@ digitalWrite(13,LOW);
 digitalWrite(SSerialTxControl, LOW);
 digitalWrite(Zamok,HIGH);
  if (RS485Serial.available()) {
+  string = "";
+  delay(100);
   tx();
+ }
+ if (digitalRead(anal_comm) == LOW)
+ {  
+  a=0;
+  p=0;
+  stepleft();
  }
 }
 

@@ -1,21 +1,21 @@
 #include <SoftwareSerial.h>
-#define SSerialRX        8  //Serial Receive pin
+#define SSerialRX       4  //Serial Receive pin
 #define SSerialTX        3  //Serial Transmit pin
-#define SSerialTxControl 2   //RS485 Direction control
+#define SSerialTxControl 12   //RS485 Direction control
+#define anal_comm 9 //analog_communication - коммуникация через жопу, т.к. RS485 не работает
 #define RS485Transmit    HIGH
 #define RS485Receive     LOW
 
 int Zamok=7;        //магнітний замок
-int MHSens= 6;      //дарчик-кінцевик
+int MHSens= 8;      //дарчик-кінцевик
 int dirOutPin = 5;
-int stepOutPin = 4;
+int stepOutPin = 6;
 
 int               a = 0;
 int               p = 0;
 int               c = 0;
-String string0 = "Master_ShoeRack1_180deg#";
+String string0 = "Master_ShoeRack2_180deg#";
 String string;
-
 
 SoftwareSerial RS485Serial(SSerialRX, SSerialTX); // RX, TX
 
@@ -29,7 +29,7 @@ void setup()
    pinMode(SSerialTxControl, OUTPUT); 
     digitalWrite(SSerialTxControl, LOW); 
     RS485Serial.begin(9600); 
-   
+    pinMode(anal_comm, INPUT_PULLUP);
     pinMode(13, OUTPUT);
     pinMode(dirOutPin, OUTPUT);
     pinMode(stepOutPin, OUTPUT);
@@ -45,7 +45,7 @@ if(a=0){
       {
         p++;
         digitalWrite(Zamok,LOW);
-      digitalWrite(dirOutPin, HIGH);
+      digitalWrite(dirOutPin, LOW);
 
       digitalWrite(stepOutPin, HIGH);
 
@@ -64,9 +64,18 @@ digitalWrite(13,LOW);
 digitalWrite(SSerialTxControl, LOW);
 digitalWrite(Zamok,HIGH);
  if (RS485Serial.available()) {
+   string = "";
+  delay(100);
   tx();
+}
+  if (digitalRead(anal_comm) == LOW)
+ {  
+  a=0;
+  p=0;
+  stepleft();
  }
 }
+
 
 void tx() {   // розпізнання команд
   digitalWrite(SSerialTxControl, LOW);

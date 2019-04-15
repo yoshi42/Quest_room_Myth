@@ -11,8 +11,8 @@ int solen = 5;              //соленоид
 int sens = 10;              //концевик
 
 int start = 0;              //флаг режимов 0,1,2
-int a = 0;                  //щетчик
-int p = 0;                  //Щетчик включения аудио
+int a = 0;                  //счетчик
+int p = 0;                  //счетчик включения аудио
 int p1=0;                   //флаг в дежурном режиме
 int mp_1 = 0;               //
 int mp_2 = 0;               //
@@ -21,7 +21,25 @@ int buzzer = 0;             //флаг для звонка
 int q = 0;                  //флаг для трубки
 int s = 0;                  //щетчик общий
 
+/*/Аналоговая коммуникация - замена RS485, коммуникация через жопу
+anal_comm_a9 INPUT_PULLUP
+anal_comm_a10 INPUT_PULLUP
+anal_comm_a10 OUTPUT
 
+    a9 a10 a11
+ru   1   0  -
+en   0   1  -
+heb  0   0  -
+
+good -   -  0
+*/
+
+#define anal_comm_a9 7
+#define anal_comm_a10 2
+#define anal_comm_a11 3 //good
+
+int flag_start = 0;
+int flag_ring = 0;
 
 String string0 = "Master_Phone2_start#";
 String string1 = "Master_Phone2_ring#";
@@ -55,7 +73,12 @@ mySerial.begin(9600);                     // скорость софт Сери�
  pinMode(SSerialTxControl, OUTPUT);
   digitalWrite(SSerialTxControl, LOW);
   RS485Serial.begin(9600);
+
   
+  pinMode(anal_comm_a9, INPUT_PULLUP);                     
+  pinMode(anal_comm_a10, INPUT_PULLUP);                      
+  pinMode(anal_comm_a11, OUTPUT);
+  digitalWrite(anal_comm_a11,HIGH);
 
 }
 
@@ -65,13 +88,29 @@ void loop() {
   {
     string = "";
     delay(100);
-    tx();
+   // tx();
     
   }
+   if (digitalRead(anal_comm_a9) == HIGH && digitalRead(anal_comm_a10) == LOW && flag_start == 0)
+ {
+    start=1;
+    time0=-10000;
+    flag_start = 1;
+ }
+ if (digitalRead(anal_comm_a9) == LOW && digitalRead(anal_comm_a10) == HIGH && flag_ring == 0)
+ {
+    s=0;
+    start=2;
+    time3=millis();
+    flag_ring=1;
+ }
+ if(digitalRead(anal_comm_a9) == LOW && digitalRead(anal_comm_a10) == LOW){
+  start=0;
+  flag_start = 0;
+  flag_ring=0;
+ }
  message_start();
     
-    
-
 }
 
 void tx() {                          // розпізнання команди
@@ -173,8 +212,8 @@ void message_start(){
             int k = 0;
               if(a>20){
                 if(k==0){
-                  digitalWrite(SSerialTxControl, HIGH);
-                  delay(100);
+                  digitalWrite(anal_comm_a11, HIGH);
+                  delay(300);
                   RS485Serial.println(stringgood); 
                   k=1;
                 }

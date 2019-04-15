@@ -1,16 +1,26 @@
 #include <SoftwareSerial.h>
 #include <DFPlayer_Mini_Mp3.h>
 
-#define SSerialRX        4  //Serial Receive pin
-#define SSerialTX        2  //Serial Transmit pin
-#define SSerialTxControl 3   //RS485 Direction control
-#define RS485Transmit    HIGH
-#define RS485Receive     LOW
+/*/Аналоговая коммуникация - замена RS485, коммуникация через жопу
+anal_comm_d48 INPUT_PULLUP
+anal_comm_d50 INPUT_PULLUP
 
-int dir = 6;
-int stp = 7;
+    a9 a10 a11
+ru   1   0  -
+en   0   1  -
+heb  0   0  -
+
+*/
+
+#define anal_comm_d48 4
+#define anal_comm_d50 2
+
+int flag_ru = 0;
+int flag_en = 0;
+int flag_heb = 0;
+
+
 int Svet = 5;
-int enable = 8;
 
 int brightness = 6;    // how bright the LED is
 int fadeAmount = 50;    // how many points to fade the LED by
@@ -26,46 +36,64 @@ int p = 0;
 
 unsigned long time0 = 0;
 
-SoftwareSerial RS485Serial(SSerialRX, SSerialTX); // RX, TX
-
 void setup() {
   Serial.begin(9600);
-  pinMode(SSerialTxControl, OUTPUT);
-  digitalWrite(SSerialTxControl, LOW);
-  RS485Serial.begin(9600);
   mp3_set_serial (Serial);  //   софтовый серийный порт для мп3
   delay (100);                              //  обязательная задержка между командами
   mp3_set_volume (30);
-  pinMode(dir, OUTPUT);
-  pinMode(stp, OUTPUT);
   pinMode(Svet, OUTPUT);
-  digitalWrite(enable, LOW);
   pinMode(13, OUTPUT);
+  
+  pinMode(anal_comm_d48, INPUT_PULLUP);                     
+  pinMode(anal_comm_d50, INPUT_PULLUP);  
 
+  delay(1000);
 }
 
-void state1(int s)
-{
-  if(s==1){
-  mp3_play (1);                            // Произрываем "mp3/0001.mp3"
-  }
-   if(s==2){
-  mp3_play (2);                            // Произрываем "mp3/0001.mp3"
-  }
-   if(s==3){
-  mp3_play (3);                            // Произрываем "mp3/0001.mp3"
-  }
- loop();
 
-}
 
 void loop() {
-  if (RS485Serial.available()) {
-    string = "";
-  delay(100);
-     tx();
-  }
   
+  
+  if (digitalRead(anal_comm_d48) == HIGH && digitalRead(anal_comm_d50) == LOW && flag_ru == 0)
+ {
+    delay(200);
+    flag_ru = 1;
+ }
+ if(flag_ru==1){
+    mp3_play (1);
+    p=1;
+    time0=millis();
+    flag_ru = 2;
+ }
+ if (digitalRead(anal_comm_d48) == LOW && digitalRead(anal_comm_d50) == HIGH && flag_en == 0)
+ {
+    delay(200);
+    flag_en = 1;
+ }
+ if(flag_en==1){
+    mp3_play (2); 
+        p=1;
+        time0=millis();
+     flag_en = 2;
+ }
+ if (digitalRead(anal_comm_d48) == LOW && digitalRead(anal_comm_d50) == LOW && flag_heb == 0)
+ {
+    delay(200);
+    flag_heb = 1;
+ }
+ if(flag_heb==1){
+    mp3_play (3);
+        p=1;
+        time0=millis();
+    flag_heb = 2;
+ }
+ if(digitalRead(anal_comm_d48) == HIGH && digitalRead(anal_comm_d50) == HIGH){
+  delay(200);
+   flag_ru = 0;
+   flag_en = 0;
+   flag_heb = 0;
+ }
   
   
   if(p==1 && millis() - time0<60000){
@@ -82,39 +110,6 @@ void loop() {
   
 }
 
-void tx() {                          // розпізнання команди
-  digitalWrite(SSerialTxControl, LOW);
-  while (RS485Serial.available())
-  {
-    char inChar = RS485Serial.read();
-    string += inChar;
-    if (inChar == '#')
-    {
-      if (string.equals(string0))
-      {
-        state1(1);
-        p=1;
-        time0=millis();
-      }
-      if (string.equals(string1))
-      {
-        state1(2);
-        p=1;
-        time0=millis();
-      }
-      if (string.equals(string2))
-      {
-        state1(3);
-        p=1;
-        time0=millis();
-      }
-
-      string = "";
-    }
-
-  }
-  loop();
-}
 
 
 

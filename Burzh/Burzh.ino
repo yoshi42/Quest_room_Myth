@@ -1,10 +1,33 @@
 #include <Adafruit_NeoPixel.h>
 #include <SoftwareSerial.h>
+/*
 #define SSerialRX        7  //Serial Receive pin
 #define SSerialTX        3  //Serial Transmit pin
 #define SSerialTxControl 2   //RS485 Direction control
 #define RS485Transmit    HIGH
 #define RS485Receive     LOW
+*/
+/*/Аналоговая коммуникация - замена RS485, коммуникация через жопу
+
+
+        2   3 
+on      0   1   
+off     1   0   
+open    0   0  
+
+        7  
+good -  0   
+
+*/
+
+#define anal_comm_a2 2
+#define anal_comm_a3 3
+#define anal_comm_a7 7 
+
+int flag_on = 0;
+ int flag_off = 0;
+ int flag_open = 0;
+ 
 #ifdef __AVR__
 #include <avr/power.h>
 #endif
@@ -35,17 +58,22 @@ int r;
 
 unsigned long time0 = 0;
 unsigned long time1 = 0;
-SoftwareSerial RS485Serial(SSerialRX, SSerialTX); // RX, TX
+//SoftwareSerial RS485Serial(SSerialRX, SSerialTX); // RX, TX
 
 void setup() {
   Serial.begin(9600);
-  pinMode(SSerialTxControl, OUTPUT);
-  digitalWrite(SSerialTxControl, LOW);\
+  //pinMode(SSerialTxControl, OUTPUT);
+  //digitalWrite(SSerialTxControl, LOW);\
   pinMode(zamok, OUTPUT);
-  digitalWrite(zamok, HIGH);
+  digitalWrite(zamok, LOW);
   pinMode(hollSens, INPUT_PULLUP);
   pinMode(rele, OUTPUT);
-  RS485Serial.begin(9600); 
+
+   pinMode(anal_comm_a2, INPUT_PULLUP);                     
+    pinMode(anal_comm_a3, INPUT_PULLUP);  
+    pinMode(anal_comm_a7, OUTPUT);
+    digitalWrite(anal_comm_a7,HIGH);
+ // RS485Serial.begin(9600); 
 // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
 #if defined (__AVR_ATtiny85__)
 if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
@@ -58,12 +86,12 @@ strip.show(); // Initialize all pixels to ‘off’
 }
 
 void loop() {
-digitalWrite(SSerialTxControl, LOW);
-   if (RS485Serial.available()) {
-    string = "";
-  delay(100);
+//digitalWrite(SSerialTxControl, LOW);
+   //if (RS485Serial.available()) {
+    //string = "";
+  //delay(100);
   tx();
- } 
+ //} 
 if (p==0){      //викл лєнту
   int r = 0;
     int b = 0;
@@ -105,7 +133,12 @@ if (p==1) {
     strip.show();
     delay(random(50,150)); 
   }
-  if (digitalRead(hollSens) == LOW && a==0){digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringgood); a=1; time0=millis();}
+  if (digitalRead(hollSens) == LOW && a==0){
+    //digitalWrite(SSerialTxControl, HIGH); RS485Serial.println(stringgood);
+    digitalWrite(anal_comm_a7,LOW);
+    delay(100);
+    digitalWrite(anal_comm_a7,HIGH);
+    a=1; time0=millis();}
   
   if (a==1){                //другий режим
     if(millis()-time0<4000){
@@ -137,34 +170,35 @@ if (p==1) {
 
 
 void tx() {                          // розпізнання команди
-  digitalWrite(SSerialTxControl, LOW);
-  while (RS485Serial.available())
-  {
-    char inChar = RS485Serial.read();
-    string += inChar;
-    if (inChar == '#') 
-    {
-      if (string.equals(string0))
-      {
-        p=1;
+if (digitalRead(anal_comm_a2) == HIGH && digitalRead(anal_comm_a3) == LOW && flag_on == 0)
+ {
+    delay(50);
+     p=1;
         time0=millis();
-      }
-      if (string.equals(string1) )
-      {  
-        p=0;
+    flag_on = 1;
+ }
+ if (digitalRead(anal_comm_a2) == LOW && digitalRead(anal_comm_a3) == HIGH && flag_off == 0)
+ {
+  delay(50);
+     p=0;
        a=0; 
-      }
-      if (string.equals(string2) )
-      {  
-       digitalWrite(zamok, LOW);   
+    flag_off = 1;
+ }
+ if (digitalRead(anal_comm_a2) == LOW && digitalRead(anal_comm_a3) == HIGH && flag_open == 0)
+ {
+    delay(50);
+    digitalWrite(zamok, HIGH);   
       delay(1000);
-     digitalWrite(zamok, HIGH);  
-      }   
-    string = "";
-    }
-
-}
-loop();
+     digitalWrite(zamok, LOW); 
+    flag_open = 1;
+ }
+ if (digitalRead(anal_comm_a2) == HIGH && digitalRead(anal_comm_a3) == HIGH){
+  delay(50);
+  flag_on = 0;
+  flag_off = 0;
+  flag_open = 0;
+ }
+      
 }
 
 
